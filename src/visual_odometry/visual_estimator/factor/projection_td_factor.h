@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ros/assert.h>
+// ros/assert.h replaced by ros_compat.h (ROS_ASSERT macro provided)
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 #include "../utility/utility.h"

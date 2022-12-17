@@ -1,5 +1,5 @@
 #include "utility.h"
-#include "lvi_sam/cloud_info.h"
+#include "../cloud_info.h"
 
 // Velodyne
 struct PointXYZIRT
@@ -43,21 +43,21 @@ private:
     std::mutex imuLock;
     std::mutex odoLock;
 
-    ros::Subscriber subLaserCloud;
-    ros::Publisher  pubLaserCloud;
-    
-    ros::Publisher pubExtractedCloud;
-    ros::Publisher pubLaserCloudInfo;
+    ros::Subscriber<sensor_msgs::PointCloud2> subLaserCloud;
+    ros::Publisher<sensor_msgs::PointCloud2>  pubLaserCloud;
 
-    ros::Subscriber subImu;
-    std::deque<sensor_msgs::Imu> imuQueue;
+    ros::Publisher<sensor_msgs::PointCloud2> pubExtractedCloud;
+    ros::Publisher<lvi_sam::cloud_info>      pubLaserCloudInfo;
 
-    ros::Subscriber subOdom;
-    std::deque<nav_msgs::Odometry> odomQueue;
+    ros::Subscriber<sensor_msgs::Imu>     subImu;
+    std::deque<sensor_msgs::Imu>          imuQueue;
 
-    std::deque<sensor_msgs::PointCloud2> cloudQueue;
-    sensor_msgs::PointCloud2 currentCloudMsg;
-    
+    ros::Subscriber<nav_msgs::Odometry>   subOdom;
+    std::deque<nav_msgs::Odometry>        odomQueue;
+
+    std::deque<sensor_msgs::PointCloud2>  cloudQueue;
+    sensor_msgs::PointCloud2              currentCloudMsg;
+
     double *imuTime = new double[queueLength];
     double *imuRotX = new double[queueLength];
     double *imuRotY = new double[queueLength];
@@ -93,8 +93,8 @@ public:
         subOdom       = nh.subscribe<nav_msgs::Odometry>      (PROJECT_NAME + "/vins/odometry/imu_propagate_ros", 2000, &ImageProjection::odometryHandler, this, ros::TransportHints().tcpNoDelay());
         subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>(pointCloudTopic, 5, &ImageProjection::cloudHandler, this, ros::TransportHints().tcpNoDelay());
 
-        pubExtractedCloud = nh.advertise<sensor_msgs::PointCloud2> (PROJECT_NAME + "/lidar/deskew/cloud_deskewed", 5);
-        pubLaserCloudInfo = nh.advertise<lvi_sam::cloud_info>      (PROJECT_NAME + "/lidar/deskew/cloud_info", 5);
+        pubExtractedCloud = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/deskew/cloud_deskewed", 5);
+        pubLaserCloudInfo = nh.advertise<lvi_sam::cloud_info>     (PROJECT_NAME + "/lidar/deskew/cloud_info",     5);
 
         allocateMemory();
         resetParameters();
@@ -563,11 +563,11 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "lidar");
 
     ImageProjection IP;
-    
+
     ROS_INFO("\033[1;32m----> Lidar Cloud Deskew Started.\033[0m");
 
     ros::MultiThreadedSpinner spinner(3);
     spinner.spin();
-    
+
     return 0;
 }

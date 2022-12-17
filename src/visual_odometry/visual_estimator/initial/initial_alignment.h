@@ -3,7 +3,7 @@
 #include <iostream>
 #include "../factor/imu_factor.h"
 #include "../utility/utility.h"
-#include <ros/ros.h>
+#include "../parameters.h"
 #include <map>
 #include "../feature_manager.h"
 
@@ -77,7 +77,7 @@ public:
     tf::Quaternion q_lidar_to_cam;
     Eigen::Quaterniond q_lidar_to_cam_eigen;
 
-    ros::Publisher pub_latest_odometry; 
+    ros::Publisher<nav_msgs::Odometry> pub_latest_odometry; 
 
     odometryRegister(ros::NodeHandle n_in):
     n(n_in)

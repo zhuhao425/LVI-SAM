@@ -1,20 +1,7 @@
 #pragma once
 
-#include <ros/ros.h>
-#include <ros/package.h>
+#include "../../ros_compat.h"
 #include <opencv2/highgui/highgui.hpp>
-
-#include <std_msgs/Header.h>
-#include <std_msgs/Bool.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/PointCloud.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/image_encodings.h>
-#include <nav_msgs/Odometry.h>
-
-#include <opencv/cv.h>
-#include <cv_bridge/cv_bridge.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -26,14 +13,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/crop_box.h> 
-#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/crop_box.h>
 
-#include <tf/LinearMath/Quaternion.h>
-#include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
-#include <tf/transform_broadcaster.h>
- 
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -56,7 +37,6 @@
 using namespace std;
 
 typedef pcl::PointXYZI PointType;
-
 
 
 extern int ROW;
@@ -93,10 +73,12 @@ extern double L_C_RY;
 extern double L_C_RZ;
 
 
-void readParameters(ros::NodeHandle &n);
+void readParameters(const std::string& config_file);
 
 float pointDistance(PointType p);
-
 float pointDistance(PointType p1, PointType p2);
 
-void publishCloud(ros::Publisher *thisPub, pcl::PointCloud<PointType>::Ptr thisCloud, ros::Time thisStamp, std::string thisFrame);
+void publishCloud(ros::Publisher<sensor_msgs::PointCloud2> *thisPub,
+                  pcl::PointCloud<PointType>::Ptr thisCloud,
+                  ros::Time thisStamp,
+                  std::string thisFrame);

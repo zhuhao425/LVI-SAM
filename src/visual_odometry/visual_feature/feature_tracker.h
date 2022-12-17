@@ -70,10 +70,10 @@ class DepthRegister
 public:
 
     ros::NodeHandle n;
-    // publisher for visualization
-    ros::Publisher pub_depth_feature;
-    ros::Publisher pub_depth_image;
-    ros::Publisher pub_depth_cloud;
+    // publishers for visualization (visualization removed; stubs)
+    ros::Publisher<sensor_msgs::PointCloud2> pub_depth_feature;
+    ros::Publisher<sensor_msgs::Image>       pub_depth_image;
+    ros::Publisher<sensor_msgs::PointCloud2> pub_depth_cloud;
 
     tf::TransformListener listener;
     tf::StampedTransform transform;
@@ -119,9 +119,9 @@ public:
         }
 
         double xCur, yCur, zCur, rollCur, pitchCur, yawCur;
-        xCur = transform.getOrigin().x();
-        yCur = transform.getOrigin().y();
-        zCur = transform.getOrigin().z();
+        xCur = transform.getOrigin().x;
+        yCur = transform.getOrigin().y;
+        zCur = transform.getOrigin().z;
         tf::Matrix3x3 m(transform.getRotation());
         m.getRPY(rollCur, pitchCur, yawCur);
         Eigen::Affine3f transNow = pcl::getTransformation(xCur, yCur, zCur, rollCur, pitchCur, yawCur);
@@ -303,7 +303,7 @@ public:
             bridge.encoding = "rgb8";
             sensor_msgs::Image::Ptr imageShowPointer = bridge.toImageMsg();
             imageShowPointer->header.stamp = stamp_cur;
-            pub_depth_image.publish(imageShowPointer);
+            pub_depth_image.publish(*imageShowPointer);
         }
 
         return depth_of_point;
