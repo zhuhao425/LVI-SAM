@@ -10,8 +10,8 @@ using namespace std;
 #include <eigen3/Eigen/Dense>
 using namespace Eigen;
 
-#include <ros/console.h>
-#include <ros/assert.h>
+// ros/console.h replaced by ros_compat.h (logging macros provided)
+// ros/assert.h replaced by ros_compat.h (ROS_ASSERT macro provided)
 
 #include "parameters.h"
 

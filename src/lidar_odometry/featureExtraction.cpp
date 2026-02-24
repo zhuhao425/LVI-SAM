@@ -1,5 +1,5 @@
 #include "utility.h"
-#include "lvi_sam/cloud_info.h"
+#include "../cloud_info.h"
 
 struct smoothness_t{ 
     float value;
@@ -17,11 +17,11 @@ class FeatureExtraction : public ParamServer
 
 public:
 
-    ros::Subscriber subLaserCloudInfo;
+    ros::Subscriber<lvi_sam::cloud_info>     subLaserCloudInfo;
 
-    ros::Publisher pubLaserCloudInfo;
-    ros::Publisher pubCornerPoints;
-    ros::Publisher pubSurfacePoints;
+    ros::Publisher<lvi_sam::cloud_info>      pubLaserCloudInfo;
+    ros::Publisher<sensor_msgs::PointCloud2> pubCornerPoints;
+    ros::Publisher<sensor_msgs::PointCloud2> pubSurfacePoints;
 
     pcl::PointCloud<PointType>::Ptr extractedCloud;
     pcl::PointCloud<PointType>::Ptr cornerCloud;
@@ -41,10 +41,10 @@ public:
     {
         subLaserCloudInfo = nh.subscribe<lvi_sam::cloud_info>(PROJECT_NAME + "/lidar/deskew/cloud_info", 5, &FeatureExtraction::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
 
-        pubLaserCloudInfo = nh.advertise<lvi_sam::cloud_info> (PROJECT_NAME + "/lidar/feature/cloud_info", 5);
-        pubCornerPoints = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/feature/cloud_corner", 5);
-        pubSurfacePoints = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/feature/cloud_surface", 5);
-        
+        pubLaserCloudInfo = nh.advertise<lvi_sam::cloud_info>     (PROJECT_NAME + "/lidar/feature/cloud_info",    5);
+        pubCornerPoints   = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/feature/cloud_corner",  5);
+        pubSurfacePoints  = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/feature/cloud_surface", 5);
+
         initializationValue();
     }
 

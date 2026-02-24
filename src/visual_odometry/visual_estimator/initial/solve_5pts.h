@@ -8,7 +8,7 @@ using namespace std;
 #include <eigen3/Eigen/Dense>
 using namespace Eigen;
 
-#include <ros/console.h>
+// ros/console.h replaced by ros_compat.h (logging macros provided)
 
 class MotionEstimator
 {

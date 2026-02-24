@@ -153,40 +153,7 @@ void LoopDetector::addKeyFrameIntoVoc(KeyFrame* keyframe)
     db.add(keyframe->brief_descriptors);
 }
 
-void LoopDetector::visualizeKeyPoses(double time_cur)
+void LoopDetector::visualizeKeyPoses(double /*time_cur*/)
 {
-    if (keyframelist.empty() || pub_key_pose.getNumSubscribers() == 0)
-        return;
-
-    visualization_msgs::MarkerArray markerArray;
-
-    int count = 0;
-    int count_lim = 10;
-
-    visualization_msgs::Marker markerNode;
-    markerNode.header.frame_id = "vins_world";
-    markerNode.header.stamp = ros::Time().fromSec(time_cur);
-    markerNode.action = visualization_msgs::Marker::ADD;
-    markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
-    markerNode.ns = "keyframe_nodes";
-    markerNode.id = 0;
-    markerNode.pose.orientation.w = 1;
-    markerNode.scale.x = 0.3; markerNode.scale.y = 0.3; markerNode.scale.z = 0.3; 
-    markerNode.color.r = 0; markerNode.color.g = 0.8; markerNode.color.b = 1;
-    markerNode.color.a = 1;
-
-    for (list<KeyFrame*>::reverse_iterator rit = keyframelist.rbegin(); rit != keyframelist.rend(); ++rit)
-    {
-        if (count++ > count_lim)
-            break;
-
-        geometry_msgs::Point p;
-        p.x = (*rit)->origin_vio_T.x();
-        p.y = (*rit)->origin_vio_T.y();
-        p.z = (*rit)->origin_vio_T.z();
-        markerNode.points.push_back(p);
-    }
-
-    markerArray.markers.push_back(markerNode);
-    pub_key_pose.publish(markerArray);
+    // Visualization removed
 }
