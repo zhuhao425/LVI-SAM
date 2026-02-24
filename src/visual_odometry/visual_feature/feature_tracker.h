@@ -70,10 +70,10 @@ class DepthRegister
 public:
 
     ros::NodeHandle n;
-    // publisher for visualization
-    ros::Publisher pub_depth_feature;
-    ros::Publisher pub_depth_image;
-    ros::Publisher pub_depth_cloud;
+    // publishers for visualization (visualization removed; stubs)
+    ros::Publisher<sensor_msgs::PointCloud2> pub_depth_feature;
+    ros::Publisher<sensor_msgs::Image>       pub_depth_image;
+    ros::Publisher<sensor_msgs::PointCloud2> pub_depth_cloud;
 
     tf::TransformListener listener;
     tf::StampedTransform transform;

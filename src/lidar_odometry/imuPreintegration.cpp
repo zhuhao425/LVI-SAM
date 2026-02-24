@@ -24,12 +24,12 @@ class IMUPreintegration : public ParamServer
 {
 public:
 
-    ros::Subscriber subImu;
-    ros::Subscriber subOdometry;
-    ros::Publisher pubImuOdometry;
-    ros::Publisher pubImuPath;
+    ros::Subscriber<sensor_msgs::Imu>  subImu;
+    ros::Subscriber<nav_msgs::Odometry> subOdometry;
+    ros::Publisher<nav_msgs::Odometry>  pubImuOdometry;
+    ros::Publisher<nav_msgs::Path>      pubImuPath;
 
-    // map -> odom
+    // map -> odom (kept as tf::Transform for algorithm compatibility)
     tf::Transform map_to_odom;
     tf::TransformBroadcaster tfMap2Odom;
     // odom -> base_link

@@ -8,8 +8,7 @@
 #include "initial/initial_sfm.h"
 #include "initial/initial_alignment.h"
 #include "initial/initial_ex_rotation.h"
-#include <std_msgs/Header.h>
-#include <std_msgs/Float32.h>
+// std_msgs::Header and std_msgs::Float32 come from ros_compat.h via parameters.h
 
 #include <ceres/ceres.h>
 #include "factor/imu_factor.h"

@@ -1,5 +1,5 @@
 #pragma once
-#include <ros/assert.h>
+// ros/assert.h replaced by ros_compat.h (ROS_ASSERT macro provided)
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 

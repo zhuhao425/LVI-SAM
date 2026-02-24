@@ -8,7 +8,7 @@ using namespace std;
 
 #include <eigen3/Eigen/Dense>
 using namespace Eigen;
-#include <ros/console.h>
+// ros/console.h replaced by ros_compat.h (logging macros provided)
 
 /* This class help you to calibrate extrinsic rotation between imu and camera when your totally don't konw the extrinsic parameter */
 class InitialEXRotation

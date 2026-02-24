@@ -1,5 +1,5 @@
 #include "utility.h"
-#include "lvi_sam/cloud_info.h"
+#include "../cloud_info.h"
 
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
@@ -59,21 +59,21 @@ public:
     Values isamCurrentEstimate;
     Eigen::MatrixXd poseCovariance;
 
-    ros::Publisher pubLaserCloudSurround;
-    ros::Publisher pubOdomAftMappedROS;
-    ros::Publisher pubKeyPoses;
-    ros::Publisher pubPath;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubLaserCloudSurround;
+    ros::Publisher<nav_msgs::Odometry>              pubOdomAftMappedROS;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubKeyPoses;
+    ros::Publisher<nav_msgs::Path>                  pubPath;
 
-    ros::Publisher pubHistoryKeyFrames;
-    ros::Publisher pubIcpKeyFrames;
-    ros::Publisher pubRecentKeyFrames;
-    ros::Publisher pubRecentKeyFrame;
-    ros::Publisher pubCloudRegisteredRaw;
-    ros::Publisher pubLoopConstraintEdge;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubHistoryKeyFrames;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubIcpKeyFrames;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubRecentKeyFrames;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubRecentKeyFrame;
+    ros::Publisher<sensor_msgs::PointCloud2>        pubCloudRegisteredRaw;
+    ros::Publisher<visualization_msgs::MarkerArray> pubLoopConstraintEdge;
 
-    ros::Subscriber subLaserCloudInfo;
-    ros::Subscriber subGPS;
-    ros::Subscriber subLoopInfo;
+    ros::Subscriber<lvi_sam::cloud_info>            subLaserCloudInfo;
+    ros::Subscriber<nav_msgs::Odometry>             subGPS;
+    ros::Subscriber<std_msgs::Float64MultiArray>    subLoopInfo;
 
     std::deque<nav_msgs::Odometry> gpsQueue;
     lvi_sam::cloud_info cloudInfo;
@@ -150,14 +150,14 @@ public:
         parameters.relinearizeSkip = 1;
         isam = new ISAM2(parameters);
 
-        pubKeyPoses           = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/mapping/trajectory", 1);
-        pubLaserCloudSurround = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/mapping/map_global", 1);
-        pubOdomAftMappedROS   = nh.advertise<nav_msgs::Odometry>      (PROJECT_NAME + "/lidar/mapping/odometry", 1);
-        pubPath               = nh.advertise<nav_msgs::Path>          (PROJECT_NAME + "/lidar/mapping/path", 1);
+        pubKeyPoses           = nh.advertise<sensor_msgs::PointCloud2>       (PROJECT_NAME + "/lidar/mapping/trajectory", 1);
+        pubLaserCloudSurround = nh.advertise<sensor_msgs::PointCloud2>       (PROJECT_NAME + "/lidar/mapping/map_global", 1);
+        pubOdomAftMappedROS   = nh.advertise<nav_msgs::Odometry>             (PROJECT_NAME + "/lidar/mapping/odometry", 1);
+        pubPath               = nh.advertise<nav_msgs::Path>                 (PROJECT_NAME + "/lidar/mapping/path", 1);
 
-        subLaserCloudInfo     = nh.subscribe<lvi_sam::cloud_info>     (PROJECT_NAME + "/lidar/feature/cloud_info", 5, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
-        subGPS                = nh.subscribe<nav_msgs::Odometry>      (gpsTopic,                                   50, &mapOptimization::gpsHandler, this, ros::TransportHints().tcpNoDelay());
-        subLoopInfo           = nh.subscribe<std_msgs::Float64MultiArray>(PROJECT_NAME + "/vins/loop/match_frame", 5, &mapOptimization::loopHandler, this, ros::TransportHints().tcpNoDelay());
+        subLaserCloudInfo     = nh.subscribe<lvi_sam::cloud_info>           (PROJECT_NAME + "/lidar/feature/cloud_info", 5, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
+        subGPS                = nh.subscribe<nav_msgs::Odometry>            (gpsTopic, 50, &mapOptimization::gpsHandler, this, ros::TransportHints().tcpNoDelay());
+        subLoopInfo           = nh.subscribe<std_msgs::Float64MultiArray>   (PROJECT_NAME + "/vins/loop/match_frame", 5, &mapOptimization::loopHandler, this, ros::TransportHints().tcpNoDelay());
 
         pubHistoryKeyFrames   = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/mapping/loop_closure_history_cloud", 1);
         pubIcpKeyFrames       = nh.advertise<sensor_msgs::PointCloud2>(PROJECT_NAME + "/lidar/mapping/loop_closure_corrected_cloud", 1);
@@ -595,56 +595,7 @@ public:
             loopIndexContainer[key_cur] = key_pre;
         }
 
-        // visualize loop constraints
-        if (!loopIndexContainer.empty())
-        {
-            visualization_msgs::MarkerArray markerArray;
-            // loop nodes
-            visualization_msgs::Marker markerNode;
-            markerNode.header.frame_id = "odom";
-            markerNode.header.stamp = timeLaserInfoStamp;
-            markerNode.action = visualization_msgs::Marker::ADD;
-            markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
-            markerNode.ns = "loop_nodes";
-            markerNode.id = 0;
-            markerNode.pose.orientation.w = 1;
-            markerNode.scale.x = 0.3; markerNode.scale.y = 0.3; markerNode.scale.z = 0.3; 
-            markerNode.color.r = 0; markerNode.color.g = 0.8; markerNode.color.b = 1;
-            markerNode.color.a = 1;
-            // loop edges
-            visualization_msgs::Marker markerEdge;
-            markerEdge.header.frame_id = "odom";
-            markerEdge.header.stamp = timeLaserInfoStamp;
-            markerEdge.action = visualization_msgs::Marker::ADD;
-            markerEdge.type = visualization_msgs::Marker::LINE_LIST;
-            markerEdge.ns = "loop_edges";
-            markerEdge.id = 1;
-            markerEdge.pose.orientation.w = 1;
-            markerEdge.scale.x = 0.1;
-            markerEdge.color.r = 0.9; markerEdge.color.g = 0.9; markerEdge.color.b = 0;
-            markerEdge.color.a = 1;
-
-            for (auto it = loopIndexContainer.begin(); it != loopIndexContainer.end(); ++it)
-            {
-                int key_cur = it->first;
-                int key_pre = it->second;
-                geometry_msgs::Point p;
-                p.x = copy_cloudKeyPoses6D->points[key_cur].x;
-                p.y = copy_cloudKeyPoses6D->points[key_cur].y;
-                p.z = copy_cloudKeyPoses6D->points[key_cur].z;
-                markerNode.points.push_back(p);
-                markerEdge.points.push_back(p);
-                p.x = copy_cloudKeyPoses6D->points[key_pre].x;
-                p.y = copy_cloudKeyPoses6D->points[key_pre].y;
-                p.z = copy_cloudKeyPoses6D->points[key_pre].z;
-                markerNode.points.push_back(p);
-                markerEdge.points.push_back(p);
-            }
-
-            markerArray.markers.push_back(markerNode);
-            markerArray.markers.push_back(markerEdge);
-            pubLoopConstraintEdge.publish(markerArray);
-        }
+        // visualize loop constraints (visualization removed)
     }
 
     void loopFindNearKeyframes(const pcl::PointCloud<PointTypePose>::Ptr& copy_cloudKeyPoses6D,

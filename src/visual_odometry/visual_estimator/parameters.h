@@ -1,20 +1,10 @@
 #pragma once
 
-#include <ros/ros.h>
-#include <ros/package.h>
+#include "../../ros_compat.h"
 #include <eigen3/Eigen/Dense>
 #include "utility/utility.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
-
-#include <std_msgs/Header.h>
-#include <std_msgs/Bool.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/PointCloud.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/image_encodings.h>
-#include <nav_msgs/Odometry.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -26,14 +16,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/crop_box.h> 
-#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/crop_box.h>
 
-#include <tf/LinearMath/Quaternion.h>
-#include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
-#include <tf/transform_broadcaster.h>
- 
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -53,7 +37,6 @@
 #include <mutex>
 
 const int WINDOW_SIZE = 10;
-
 
 const double FOCAL_LENGTH = 460.0;
 const int NUM_OF_CAM = 1;
@@ -88,7 +71,7 @@ extern double ROW, COL;
 extern int USE_LIDAR;
 extern int ALIGN_CAMERA_LIDAR_COORDINATE;
 
-void readParameters(ros::NodeHandle &n);
+void readParameters(const std::string& config_file);
 
 enum SIZE_PARAMETERIZATION
 {
