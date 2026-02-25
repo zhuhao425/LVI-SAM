@@ -13,6 +13,9 @@
 
 using namespace Eigen;
 
+// Anonymous namespace gives internal linkage to file-local state, preventing
+// name conflicts when linked into the combined single-process executable.
+namespace {
 
 Estimator estimator;
 
@@ -41,6 +44,8 @@ Eigen::Vector3d gyr_0;
 bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
+
+} // anonymous namespace
 
 void predict(const sensor_msgs::ImuConstPtr &imu_msg)
 {
@@ -200,7 +205,7 @@ void restart_callback(const std_msgs::Bool::ConstPtr &restart_msg)
 }
 
 // thread: visual-inertial odometry
-void process()
+static void process()
 {
     while (ros::ok())
     {
@@ -303,10 +308,34 @@ void process()
     }
 }
 
+// Initialize the visual estimator and register subscriptions/publishers.
+// Returns the VIO processing thread so the caller can join it.
+std::thread initEstimatorNode(const std::string& config_file)
+{
+    ros::NodeHandle n;
+    ROS_INFO("\033[1;32m----> Visual Odometry Estimator Started.\033[0m");
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
+
+    readParameters(config_file);
+    estimator.setParameter();
+
+    registerPub(n);
+
+    odomRegister = new odometryRegister(n);
+
+    ros::Subscriber<sensor_msgs::Imu>          sub_imu     = n.subscribe<sensor_msgs::Imu>         (IMU_TOPIC, 5000, imu_callback, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber<nav_msgs::Odometry>        sub_odom    = n.subscribe<nav_msgs::Odometry>        ("odometry/imu", 5000, odom_callback);
+    ros::Subscriber<sensor_msgs::PointCloud>   sub_image   = n.subscribe<sensor_msgs::PointCloud>   (PROJECT_NAME + "/vins/feature/feature", 1, feature_callback);
+    ros::Subscriber<std_msgs::Bool>            sub_restart = n.subscribe<std_msgs::Bool>            (PROJECT_NAME + "/vins/feature/restart", 1, restart_callback);
+    (void)sub_imu; (void)sub_odom; (void)sub_image; (void)sub_restart;
+
+    return std::thread{process};
+}
+
+#ifndef LVI_SAM_COMBINED_NODE
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "vins");
-    ros::NodeHandle n;
     ROS_INFO("\033[1;32m----> Visual Odometry Estimator Started.\033[0m");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
 
@@ -321,26 +350,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    readParameters(config_file);
-    estimator.setParameter();
-
-    registerPub(n);
-
-    odomRegister = new odometryRegister(n);
-
-    ros::Subscriber<sensor_msgs::Imu>          sub_imu     = n.subscribe<sensor_msgs::Imu>         (IMU_TOPIC, 5000, imu_callback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber<nav_msgs::Odometry>        sub_odom    = n.subscribe<nav_msgs::Odometry>        ("odometry/imu", 5000, odom_callback);
-    ros::Subscriber<sensor_msgs::PointCloud>   sub_image   = n.subscribe<sensor_msgs::PointCloud>   (PROJECT_NAME + "/vins/feature/feature", 1, feature_callback);
-    ros::Subscriber<std_msgs::Bool>            sub_restart = n.subscribe<std_msgs::Bool>            (PROJECT_NAME + "/vins/feature/restart", 1, restart_callback);
-    if (!USE_LIDAR)
-    {
-        // sub_odom is still subscribed; without lidar, odomQueue stays empty
-    }
-
-    std::thread measurement_process{process};
+    std::thread measurement_process = initEstimatorNode(config_file);
 
     ros::MultiThreadedSpinner spinner(4);
     spinner.spin();
 
+    measurement_process.join();
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE

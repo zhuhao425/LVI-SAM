@@ -1,6 +1,14 @@
 #include "parameters.h"
 
+// In combined-node mode, PROJECT_NAME, IMU_TOPIC, USE_LIDAR, ROW, and COL
+// are already defined as single instances by visual_feature/parameters.cpp.
+// Guard these definitions to avoid "multiple definition" linker errors.
+#ifndef LVI_SAM_COMBINED_NODE
 std::string PROJECT_NAME;
+std::string IMU_TOPIC;
+int USE_LIDAR;
+double ROW, COL;
+#endif // LVI_SAM_COMBINED_NODE
 
 double INIT_DEPTH;
 double MIN_PARALLAX;
@@ -20,11 +28,8 @@ int ESTIMATE_EXTRINSIC;
 int ESTIMATE_TD;
 int ROLLING_SHUTTER;
 std::string EX_CALIB_RESULT_PATH;
-std::string IMU_TOPIC;
-double ROW, COL;
 double TD, TR;
 
-int USE_LIDAR;
 int ALIGN_CAMERA_LIDAR_COORDINATE;
 
 
@@ -57,7 +62,7 @@ void readParameters(const std::string& config_file)
     G.z() = fsSettings["g_norm"];
     ROW   = fsSettings["image_height"];
     COL   = fsSettings["image_width"];
-    ROS_INFO("Image dimension: ROW: %f COL: %f", ROW, COL);
+    ROS_INFO("Image dimension: ROW: %d COL: %d", (int)ROW, (int)COL);
 
     ESTIMATE_EXTRINSIC = fsSettings["estimate_extrinsic"];
     if (ESTIMATE_EXTRINSIC == 2)

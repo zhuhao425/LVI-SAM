@@ -262,15 +262,21 @@ public:
 };
 
 
+void startFeatureExtractionNode()
+{
+    static FeatureExtraction FE;
+    ROS_INFO("\033[1;32m----> Lidar Feature Extraction Started.\033[0m");
+}
+
+#ifndef LVI_SAM_COMBINED_NODE
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "lidar");
 
-    FeatureExtraction FE;
-
-    ROS_INFO("\033[1;32m----> Lidar Feature Extraction Started.\033[0m");
+    startFeatureExtractionNode();
    
     ros::spin();
 
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE

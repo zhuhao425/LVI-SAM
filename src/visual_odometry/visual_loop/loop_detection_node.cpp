@@ -7,6 +7,11 @@ using namespace std;
 
 #define SKIP_FIRST_CNT 10
 
+// Anonymous namespace gives internal linkage to file-local state, preventing
+// name conflicts when linked into the combined single-process executable.
+// Only variables that are never accessed by other translation units go here.
+namespace {
+
 queue<sensor_msgs::ImageConstPtr>           image_buf;
 queue<sensor_msgs::PointCloudConstPtr>      point_buf;
 queue<nav_msgs::OdometryConstPtr>           pose_buf;
@@ -16,16 +21,23 @@ std::mutex m_process;
 
 LoopDetector loopDetector;
 
+} // anonymous namespace
+
+// External-linkage globals (accessed by keyframe.cpp via parameters.h extern decls).
+camodocal::CameraPtr m_camera;
+Eigen::Vector3d tic;
+Eigen::Matrix3d qic;
+BriefExtractor briefExtractor;
+
 double SKIP_TIME = 0;
 double SKIP_DIST = 0;
 
-camodocal::CameraPtr m_camera;
-
-Eigen::Vector3d tic;
-Eigen::Matrix3d qic;
-
+// In combined-node mode, PROJECT_NAME and IMAGE_TOPIC are owned by
+// visual_feature/parameters.cpp.  Only define them here in standalone mode.
+#ifndef LVI_SAM_COMBINED_NODE
 std::string PROJECT_NAME;
 std::string IMAGE_TOPIC;
+#endif // LVI_SAM_COMBINED_NODE
 
 int DEBUG_IMAGE;
 int LOOP_CLOSURE;
@@ -37,8 +49,6 @@ ros::Publisher<sensor_msgs::Image>             pub_match_img;
 ros::Publisher<visualization_msgs::MarkerArray> pub_key_pose;
 
 
-
-BriefExtractor briefExtractor;
 
 void new_sequence()
 {
@@ -101,7 +111,7 @@ void extrinsic_callback(const nav_msgs::OdometryConstPtr &pose_msg)
     m_process.unlock();
 }
 
-void process()
+static void process()
 {
     if (!LOOP_CLOSURE)
         return;
@@ -238,39 +248,29 @@ void process()
 }
 
 
-int main(int argc, char **argv)
+// Initialize loop detection and register subscriptions/publishers.
+// Returns the loop processing thread so the caller can join it.
+std::thread initLoopDetection(const std::string& config_file)
 {
-    ros::init(argc, argv, "vins");
     ros::NodeHandle n;
     ROS_INFO("\033[1;32m----> Visual Loop Detection Started.\033[0m");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
-
-    // Config file
-    std::string config_file;
-    if (!ros::internal::g_camera_config_file.empty())
-        config_file = ros::internal::g_camera_config_file;
-    else if (argc >= 2)
-        config_file = argv[1];
-    else {
-        ROS_ERROR("Usage: %s <camera_config_file>", argv[0]);
-        return 1;
-    }
 
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if (!fsSettings.isOpened())
     {
         std::cerr << "ERROR: Wrong path to settings" << std::endl;
-        return 1;
+        return std::thread{};
     }
     usleep(100);
 
     // Initialize global params
-    fsSettings["project_name"]   >> PROJECT_NAME;
-    fsSettings["image_topic"]    >> IMAGE_TOPIC;
-    fsSettings["loop_closure"]   >> LOOP_CLOSURE;
-    fsSettings["skip_time"]      >> SKIP_TIME;
-    fsSettings["skip_dist"]      >> SKIP_DIST;
-    fsSettings["debug_image"]    >> DEBUG_IMAGE;
+    fsSettings["project_name"]      >> PROJECT_NAME;
+    fsSettings["image_topic"]       >> IMAGE_TOPIC;
+    fsSettings["loop_closure"]      >> LOOP_CLOSURE;
+    fsSettings["skip_time"]         >> SKIP_TIME;
+    fsSettings["skip_dist"]         >> SKIP_DIST;
+    fsSettings["debug_image"]       >> DEBUG_IMAGE;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
 
     if (LOOP_CLOSURE)
@@ -294,20 +294,39 @@ int main(int argc, char **argv)
     ros::Subscriber<nav_msgs::Odometry>      sub_pose      = n.subscribe<nav_msgs::Odometry>     (PROJECT_NAME + "/vins/odometry/keyframe_pose",  3, pose_callback);
     ros::Subscriber<sensor_msgs::PointCloud> sub_point     = n.subscribe<sensor_msgs::PointCloud>(PROJECT_NAME + "/vins/odometry/keyframe_point", 3, point_callback);
     ros::Subscriber<nav_msgs::Odometry>      sub_extrinsic = n.subscribe<nav_msgs::Odometry>     (PROJECT_NAME + "/vins/odometry/extrinsic",      3, extrinsic_callback);
+    (void)sub_image; (void)sub_pose; (void)sub_point; (void)sub_extrinsic;
 
     pub_match_img = n.advertise<sensor_msgs::Image>             (PROJECT_NAME + "/vins/loop/match_image", 3);
     pub_match_msg = n.advertise<std_msgs::Float64MultiArray>    (PROJECT_NAME + "/vins/loop/match_frame", 3);
     pub_key_pose  = n.advertise<visualization_msgs::MarkerArray>(PROJECT_NAME + "/vins/loop/keyframe_pose", 3);
 
-    if (!LOOP_CLOSURE)
-    {
-        // subscribers already created but won't be triggered without LOOP_CLOSURE
+    return std::thread{process};
+}
+
+#ifndef LVI_SAM_COMBINED_NODE
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "vins");
+    ROS_INFO("\033[1;32m----> Visual Loop Detection Started.\033[0m");
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
+
+    // Config file
+    std::string config_file;
+    if (!ros::internal::g_camera_config_file.empty())
+        config_file = ros::internal::g_camera_config_file;
+    else if (argc >= 2)
+        config_file = argv[1];
+    else {
+        ROS_ERROR("Usage: %s <camera_config_file>", argv[0]);
+        return 1;
     }
 
-    std::thread measurement_process;
-    measurement_process = std::thread(process);
+    std::thread measurement_process = initLoopDetection(config_file);
 
     ros::spin();
 
+    if (measurement_process.joinable())
+        measurement_process.join();
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE
