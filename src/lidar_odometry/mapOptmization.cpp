@@ -17,6 +17,7 @@
 #include <gtsam/nonlinear/ISAM2.h>
 
 using namespace gtsam;
+using namespace std;
 
 using symbol_shorthand::X; // Pose3 (x,y,z,r,p,y)
 using symbol_shorthand::V; // Vel   (xdot,ydot,zdot)
