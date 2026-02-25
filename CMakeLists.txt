@@ -99,3 +99,41 @@ add_executable(${PROJECT_NAME}_mapOptmization src/lidar_odometry/mapOptmization.
 target_compile_options(${PROJECT_NAME}_mapOptmization PRIVATE ${OpenMP_CXX_FLAGS})
 target_link_libraries(${PROJECT_NAME}_mapOptmization
     ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${OpenMP_CXX_FLAGS} gtsam Boost::timer)
+
+######################
+### Combined single-process node
+######################
+# All pipeline components compiled into one executable.
+# Internal messages use the in-process broker (ros_compat.h); no middleware.
+# Sensor data is injected via the NodeInterface (ros::NodeHandle/Publisher/Subscriber).
+#
+# Source files are the same as the individual targets above, plus the combined
+# entry point.  The LVI_SAM_COMBINED_NODE preprocessor flag suppresses the
+# individual main() functions so only the combined main in lvi_sam_node.cpp
+# is compiled.
+file(GLOB visual_loop_files_no_cam_models
+    "src/visual_odometry/visual_loop/*.cpp"
+    "src/visual_odometry/visual_loop/utility/*.cpp"
+    "src/visual_odometry/visual_loop/ThirdParty/*.cpp"
+    "src/visual_odometry/visual_loop/ThirdParty/DBoW/*.cpp"
+    "src/visual_odometry/visual_loop/ThirdParty/DUtils/*.cpp"
+    "src/visual_odometry/visual_loop/ThirdParty/DVision/*.cpp"
+)
+
+add_executable(${PROJECT_NAME}
+    src/lvi_sam_node.cpp
+    # lidar pipeline
+    src/lidar_odometry/imageProjection.cpp
+    src/lidar_odometry/featureExtraction.cpp
+    src/lidar_odometry/imuPreintegration.cpp
+    src/lidar_odometry/mapOptmization.cpp
+    # visual pipeline (camera models included once via visual_feature_files)
+    ${visual_feature_files}
+    ${visual_odometry_files}
+    ${visual_loop_files_no_cam_models}
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE LVI_SAM_COMBINED_NODE)
+target_compile_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})
+target_link_libraries(${PROJECT_NAME}
+    ${PCL_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES}
+    ${OpenMP_CXX_FLAGS} gtsam Boost::timer)

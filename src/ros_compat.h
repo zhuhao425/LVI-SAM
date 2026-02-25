@@ -606,9 +606,34 @@ namespace ros {
 
 namespace internal {
 
-static std::string g_lidar_config_file;
-static std::string g_camera_config_file;
-static std::atomic<bool> g_ok{true};
+// ---------------------------------------------------------------------------
+// Process-wide shared state accessed via function-local statics.
+//
+// Using function-local statics (rather than file-scope statics) ensures that
+// all translation units in the same process share exactly ONE instance of
+// each variable.  File-scope `static` variables would give each translation
+// unit its own private copy, breaking the in-process pub/sub when the
+// combined single-process executable is built from multiple .cpp files.
+// ---------------------------------------------------------------------------
+
+inline std::string& lidarConfigFile() {
+    static std::string v;
+    return v;
+}
+inline std::string& cameraConfigFile() {
+    static std::string v;
+    return v;
+}
+// Convenience aliases kept for source compatibility.
+// Code that uses ros::internal::g_lidar_config_file / g_camera_config_file
+// should use these references.
+static std::string& g_lidar_config_file  = lidarConfigFile();
+static std::string& g_camera_config_file = cameraConfigFile();
+
+inline std::atomic<bool>& okFlag() {
+    static std::atomic<bool> v{true};
+    return v;
+}
 
 using AnyMsg  = std::shared_ptr<void>;
 using Callback = std::function<void(const AnyMsg&)>;
@@ -618,38 +643,51 @@ struct TopicData {
     std::mutex mtx;
 };
 
-static std::map<std::string, std::unique_ptr<TopicData>> g_topics;
-static std::mutex g_topics_mtx;
+inline std::map<std::string, std::unique_ptr<TopicData>>& topicsMap() {
+    static std::map<std::string, std::unique_ptr<TopicData>> v;
+    return v;
+}
+inline std::mutex& topicsMutex() {
+    static std::mutex v;
+    return v;
+}
 
 inline TopicData& getTopic(const std::string& topic) {
-    std::lock_guard<std::mutex> lk(g_topics_mtx);
-    auto it = g_topics.find(topic);
-    if (it == g_topics.end()) {
-        g_topics[topic] = std::unique_ptr<TopicData>(new TopicData());
-        it = g_topics.find(topic);
+    std::lock_guard<std::mutex> lk(topicsMutex());
+    auto& m = topicsMap();
+    auto it = m.find(topic);
+    if (it == m.end()) {
+        m[topic] = std::unique_ptr<TopicData>(new TopicData());
+        it = m.find(topic);
     }
     return *it->second;
 }
 
 // Per-process YAML config loaders
-static cv::FileStorage g_lidar_fs;
-static cv::FileStorage g_camera_fs;
+inline cv::FileStorage& lidarFs() {
+    static cv::FileStorage v;
+    return v;
+}
+inline cv::FileStorage& cameraFs() {
+    static cv::FileStorage v;
+    return v;
+}
 
 inline bool loadLidarConfig(const std::string& path) {
     g_lidar_config_file = path;
-    g_lidar_fs.open(path, cv::FileStorage::READ);
-    return g_lidar_fs.isOpened();
+    lidarFs().open(path, cv::FileStorage::READ);
+    return lidarFs().isOpened();
 }
 inline bool loadCameraConfig(const std::string& path) {
     g_camera_config_file = path;
-    g_camera_fs.open(path, cv::FileStorage::READ);
-    return g_camera_fs.isOpened();
+    cameraFs().open(path, cv::FileStorage::READ);
+    return cameraFs().isOpened();
 }
 
 // Read a (possibly nested) key from a FileStorage.
 // key format: "parent/child" or "key" (leading '/' stripped)
 template<typename T>
-static bool fsRead(cv::FileStorage& fs, const std::string& raw_key, T& val) {
+inline bool fsRead(cv::FileStorage& fs, const std::string& raw_key, T& val) {
     if (!fs.isOpened()) return false;
     std::string key = raw_key;
     if (!key.empty() && key[0] == '/') key = key.substr(1);
@@ -679,8 +717,8 @@ inline std::string packageRoot() {
 
 } // namespace internal
 
-inline bool ok() { return internal::g_ok.load(); }
-inline void shutdown() { internal::g_ok.store(false); }
+inline bool ok() { return internal::okFlag().load(); }
+inline void shutdown() { internal::okFlag().store(false); }
 
 struct TransportHints {
     TransportHints& tcpNoDelay() { return *this; }
@@ -739,9 +777,10 @@ public:
     // For visualization pubs: always return 0 so callers skip expensive publish
     int getNumSubscribers() const {
         if (topic_.empty()) return 0;
-        std::lock_guard<std::mutex> lk(internal::g_topics_mtx);
-        auto it = internal::g_topics.find(topic_);
-        if (it == internal::g_topics.end()) return 0;
+        std::lock_guard<std::mutex> lk(internal::topicsMutex());
+        auto& m = internal::topicsMap();
+        auto it = m.find(topic_);
+        if (it == m.end()) return 0;
         std::lock_guard<std::mutex> lk2(it->second->mtx);
         return static_cast<int>(it->second->callbacks.size());
     }
@@ -773,8 +812,8 @@ public:
     // param<T>(key, val, default)
     template<typename T>
     bool param(const std::string& key, T& val, const T& def) const {
-        if (internal::fsRead(internal::g_lidar_fs,  key, val)) return true;
-        if (internal::fsRead(internal::g_camera_fs, key, val)) return true;
+        if (internal::fsRead(internal::lidarFs(),  key, val)) return true;
+        if (internal::fsRead(internal::cameraFs(), key, val)) return true;
         val = def;
         return false;
     }

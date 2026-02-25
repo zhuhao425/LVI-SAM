@@ -4,6 +4,9 @@ using namespace std;
 
 #define SHOW_UNDISTORTION 0
 
+// Anonymous namespace gives internal linkage to file-local state, preventing
+// name conflicts when linked into the combined single-process executable.
+namespace {
 
 // mtx lock for two threads
 std::mutex mtx_lidar;
@@ -31,6 +34,7 @@ bool first_image_flag = true;
 double last_image_time = 0;
 bool init_pub = 0;
 
+} // anonymous namespace
 
 
 void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
@@ -271,23 +275,13 @@ void lidar_callback(const sensor_msgs::PointCloud2::ConstPtr& laser_msg)
     *depthCloud = *depthCloudDS;
 }
 
-int main(int argc, char **argv)
+// Initialize feature tracker and register subscriptions/publishers.
+// Called from the combined node entry point (lvi_sam_node.cpp).
+void initFeatureTracker(const std::string& config_file)
 {
-    ros::init(argc, argv, "vins");
     ros::NodeHandle n;
     ROS_INFO("\033[1;32m----> Visual Feature Tracker Started.\033[0m");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
-
-    // Config file is passed as first positional argument or --camera-config
-    std::string config_file;
-    if (!ros::internal::g_camera_config_file.empty())
-        config_file = ros::internal::g_camera_config_file;
-    else if (argc >= 2)
-        config_file = argv[1];
-    else {
-        ROS_ERROR("Usage: %s <camera_config_file>", argv[0]);
-        return 1;
-    }
 
     readParameters(config_file);
 
@@ -317,12 +311,34 @@ int main(int argc, char **argv)
     // subscriber to image and lidar
     ros::Subscriber<sensor_msgs::Image>       sub_img   = n.subscribe<sensor_msgs::Image>      (IMAGE_TOPIC,        5, img_callback);
     ros::Subscriber<sensor_msgs::PointCloud2> sub_lidar = n.subscribe<sensor_msgs::PointCloud2>(POINT_CLOUD_TOPIC,  5, lidar_callback);
-    (void)sub_lidar; // lidar subscription always active
+    (void)sub_img;
+    (void)sub_lidar;
 
     // messages to vins estimator
     pub_feature = n.advertise<sensor_msgs::PointCloud>(PROJECT_NAME + "/vins/feature/feature",     5);
     pub_match   = n.advertise<sensor_msgs::Image>     (PROJECT_NAME + "/vins/feature/feature_img", 5);
     pub_restart = n.advertise<std_msgs::Bool>         (PROJECT_NAME + "/vins/feature/restart",     5);
+}
+
+#ifndef LVI_SAM_COMBINED_NODE
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "vins");
+    ROS_INFO("\033[1;32m----> Visual Feature Tracker Started.\033[0m");
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn);
+
+    // Config file is passed as first positional argument or --camera-config
+    std::string config_file;
+    if (!ros::internal::g_camera_config_file.empty())
+        config_file = ros::internal::g_camera_config_file;
+    else if (argc >= 2)
+        config_file = argv[1];
+    else {
+        ROS_ERROR("Usage: %s <camera_config_file>", argv[0]);
+        return 1;
+    }
+
+    initFeatureTracker(config_file);
 
     // two spinners for parallel processing (image and lidar)
     ros::MultiThreadedSpinner spinner(2);
@@ -330,3 +346,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE

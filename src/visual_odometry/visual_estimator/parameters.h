@@ -66,7 +66,13 @@ extern double TD;
 extern double TR;
 extern int ESTIMATE_TD;
 extern int ROLLING_SHUTTER;
+// In combined-node mode ROW and COL are shared with visual_feature (int type).
+// In standalone mode they are double for historical reasons.
+#ifdef LVI_SAM_COMBINED_NODE
+extern int ROW, COL;
+#else
 extern double ROW, COL;
+#endif
 
 extern int USE_LIDAR;
 extern int ALIGN_CAMERA_LIDAR_COORDINATE;

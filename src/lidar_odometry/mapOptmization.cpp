@@ -1614,17 +1614,24 @@ public:
     }
 };
 
+// Startup function for use by the combined single-process node.
+// Creates a persistent mapOptimization instance, starts its background threads,
+// and returns them so the caller can join them at shutdown.
+void startMapOptimizationNode(std::thread& loopThread, std::thread& visThread)
+{
+    static mapOptimization MO;
+    ROS_INFO("\033[1;32m----> Lidar Map Optimization Started.\033[0m");
+    loopThread = std::thread(&mapOptimization::loopClosureThread, &MO);
+    visThread  = std::thread(&mapOptimization::visualizeGlobalMapThread, &MO);
+}
 
+#ifndef LVI_SAM_COMBINED_NODE
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "lidar");
 
-    mapOptimization MO;
-
-    ROS_INFO("\033[1;32m----> Lidar Map Optimization Started.\033[0m");
-    
-    std::thread loopDetectionthread(&mapOptimization::loopClosureThread, &MO);
-    std::thread visualizeMapThread(&mapOptimization::visualizeGlobalMapThread, &MO);
+    std::thread loopDetectionthread, visualizeMapThread;
+    startMapOptimizationNode(loopDetectionthread, visualizeMapThread);
 
     ros::spin();
 
@@ -1633,3 +1640,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE

@@ -558,16 +558,25 @@ public:
     }
 };
 
+// Startup function for use by the combined single-process node.
+// Creates a persistent ImageProjection instance that registers all
+// subscriptions via the in-process pub/sub broker (ros_compat.h).
+void startImageProjectionNode()
+{
+    static ImageProjection IP;
+    ROS_INFO("\033[1;32m----> Lidar Cloud Deskew Started.\033[0m");
+}
+
+#ifndef LVI_SAM_COMBINED_NODE
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "lidar");
 
-    ImageProjection IP;
-
-    ROS_INFO("\033[1;32m----> Lidar Cloud Deskew Started.\033[0m");
+    startImageProjectionNode();
 
     ros::MultiThreadedSpinner spinner(3);
     spinner.spin();
 
     return 0;
 }
+#endif // LVI_SAM_COMBINED_NODE
