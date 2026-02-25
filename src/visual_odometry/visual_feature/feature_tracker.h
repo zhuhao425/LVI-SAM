@@ -235,8 +235,8 @@ public:
                 float s = (N(0) * A(0) + N(1) * A(1) + N(2) * A(2)) 
                         / (N(0) * V(0) + N(1) * V(1) + N(2) * V(2));
 
-                float min_depth = min(r1, min(r2, r3));
-                float max_depth = max(r1, max(r2, r3));
+                float min_depth = std::min(r1, std::min(r2, r3));
+                float max_depth = std::max(r1, std::max(r2, r3));
                 if (max_depth - min_depth > 2 || s <= 0.5)
                 {
                     continue;

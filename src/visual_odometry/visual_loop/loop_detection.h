@@ -7,8 +7,8 @@ class LoopDetector
 {
 public:
 
-	DBoW2::BriefDatabase db;
-	DBoW2::BriefVocabulary* voc;
+    BriefDatabase db;
+    BriefVocabulary* voc;
 
 	std::map<int, cv::Mat> image_pool;
 

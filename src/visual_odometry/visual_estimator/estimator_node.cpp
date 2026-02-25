@@ -18,11 +18,11 @@ Estimator estimator;
 
 std::condition_variable con;
 double current_time = -1;
-queue<sensor_msgs::ImuConstPtr>         imu_buf;
-queue<sensor_msgs::PointCloudConstPtr>  feature_buf;
+std::queue<sensor_msgs::ImuConstPtr>         imu_buf;
+std::queue<sensor_msgs::PointCloudConstPtr>  feature_buf;
 
 // global variable saving the lidar odometry
-deque<nav_msgs::Odometry> odomQueue;
+std::deque<nav_msgs::Odometry> odomQueue;
 odometryRegister *odomRegister;
 
 std::mutex m_buf;
@@ -92,7 +92,7 @@ void update()
     acc_0  = estimator.acc_0;
     gyr_0  = estimator.gyr_0;
 
-    queue<sensor_msgs::ImuConstPtr> tmp_imu_buf = imu_buf;
+    std::queue<sensor_msgs::ImuConstPtr> tmp_imu_buf = imu_buf;
     for (sensor_msgs::ImuConstPtr tmp_imu_msg; !tmp_imu_buf.empty(); tmp_imu_buf.pop())
         predict(tmp_imu_buf.front());
 }
@@ -258,7 +258,7 @@ void process()
             }
 
             // 2. VINS Optimization
-            map<int, vector<pair<int, Eigen::Matrix<double, 8, 1>>>> image;
+            std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 8, 1>>>> image;
             for (unsigned int i = 0; i < img_msg->points.size(); i++)
             {
                 int v          = img_msg->channels[0].values[i] + 0.5;
