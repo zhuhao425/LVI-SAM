@@ -453,6 +453,19 @@ struct Quaternion {
     void setX(double v) { x = v; }
     void setY(double v) { y = v; }
     void setZ(double v) { z = v; }
+
+    void setRPY(double roll, double pitch, double yaw) {
+        Eigen::Quaterniond q =
+            Eigen::AngleAxisd(yaw,   Eigen::Vector3d::UnitZ()) *
+            Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+            Eigen::AngleAxisd(roll,  Eigen::Vector3d::UnitX());
+        x = q.x(); y = q.y(); z = q.z(); w = q.w();
+    }
+
+    Quaternion slerp(const Quaternion& other, double t) const {
+        Eigen::Quaterniond r = toEigen().slerp(t, other.toEigen());
+        return Quaternion(r.x(), r.y(), r.z(), r.w());
+    }
 };
 
 struct Vector3 {
@@ -486,6 +499,13 @@ inline Quaternion createQuaternionFromRPY(double roll, double pitch, double yaw)
         Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
         Eigen::AngleAxisd(roll,  Eigen::Vector3d::UnitX());
     return Quaternion(q.x(), q.y(), q.z(), q.w());
+}
+
+inline geometry_msgs::Quaternion createQuaternionMsgFromRollPitchYaw(double roll, double pitch, double yaw) {
+    Quaternion q = createQuaternionFromRPY(roll, pitch, yaw);
+    geometry_msgs::Quaternion msg;
+    msg.x = q.x; msg.y = q.y; msg.z = q.z; msg.w = q.w;
+    return msg;
 }
 
 struct Transform {
