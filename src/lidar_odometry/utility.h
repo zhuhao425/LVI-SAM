@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _UTILITY_LIDAR_ODOMETRY_H_
-#define _UTILITY_LIDAR_ODOMETRY_H_
 
 #include "../ros_compat.h"
 
@@ -20,25 +18,23 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <vector>
-#include <cmath>
 #include <algorithm>
-#include <queue>
-#include <deque>
-#include <iostream>
-#include <fstream>
-#include <ctime>
+#include <array>
 #include <cfloat>
+#include <cmath>
+#include <ctime>
+#include <deque>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <iterator>
+#include <limits>
+#include <mutex>
+#include <queue>
 #include <sstream>
 #include <string>
-#include <limits>
-#include <iomanip>
-#include <array>
 #include <thread>
-#include <mutex>
-
-using namespace std;
+#include <vector>
 
 typedef pcl::PointXYZI PointType;
 
@@ -52,10 +48,10 @@ public:
     std::string PROJECT_NAME;
     std::string robot_id;
 
-    string pointCloudTopic;
-    string imuTopic;
-    string odomTopic;
-    string gpsTopic;
+    std::string pointCloudTopic;
+    std::string imuTopic;
+    std::string odomTopic;
+    std::string gpsTopic;
 
     bool useImuHeadingInitialization;
     bool useGpsElevation;
@@ -63,11 +59,11 @@ public:
     float poseCovThreshold;
 
     bool savePCD;
-    string savePCDDirectory;
+    std::string savePCDDirectory;
 
     int N_SCAN;
     int Horizon_SCAN;
-    string timeField;
+    std::string timeField;
     int downsampleRate;
 
     float imuAccNoise;
@@ -75,9 +71,9 @@ public:
     float imuAccBiasN;
     float imuGyrBiasN;
     float imuGravity;
-    vector<double> extRotV;
-    vector<double> extRPYV;
-    vector<double> extTransV;
+    std::vector<double> extRotV;
+    std::vector<double> extRPYV;
+    std::vector<double> extTransV;
     Eigen::Matrix3d extRot;
     Eigen::Matrix3d extRPY;
     Eigen::Vector3d extTrans;
@@ -143,9 +139,9 @@ public:
         nh.param<float>(PROJECT_NAME + "/imuGyrBiasN",  imuGyrBiasN,  0.00003f);
         nh.param<float>(PROJECT_NAME + "/imuGravity",   imuGravity,   9.80511f);
 
-        nh.param<vector<double>>(PROJECT_NAME + "/extrinsicRot",   extRotV,   vector<double>());
-        nh.param<vector<double>>(PROJECT_NAME + "/extrinsicRPY",   extRPYV,   vector<double>());
-        nh.param<vector<double>>(PROJECT_NAME + "/extrinsicTrans", extTransV, vector<double>());
+        nh.param<std::vector<double>>(PROJECT_NAME + "/extrinsicRot",   extRotV,   std::vector<double>());
+        nh.param<std::vector<double>>(PROJECT_NAME + "/extrinsicRPY",   extRPYV,   std::vector<double>());
+        nh.param<std::vector<double>>(PROJECT_NAME + "/extrinsicTrans", extTransV, std::vector<double>());
 
         if (extRotV.size() == 9)
             extRot = Eigen::Map<const Eigen::Matrix<double,-1,-1,Eigen::RowMajor>>(extRotV.data(), 3, 3);
@@ -287,5 +283,3 @@ float pointDistance(PointType p1, PointType p2)
 {
     return sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y)+(p1.z-p2.z)*(p1.z-p2.z));
 }
-
-#endif

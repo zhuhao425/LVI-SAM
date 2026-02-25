@@ -1,7 +1,20 @@
 #pragma once
-// ros_compat.h - Drop-in replacement for ROS headers.
-// Provides all message types, pub/sub, tf utilities, and logging
-// so that LVI-SAM compiles and runs without a ROS installation.
+// ros_compat.h - Standalone middleware adapter for LVI-SAM.
+//
+// This file is the *concrete* implementation of the middleware interface
+// described in lvi_sam/node_interface.h.  It provides all ROS-compatible
+// message types, publisher/subscriber machinery, tf utilities, and logging
+// macros so that LVI-SAM compiles and runs without any ROS installation.
+//
+// To use a different middleware (ROS 1, ROS 2, LCM, ZeroMQ, …):
+//   1. Create your own adapter header following the contract documented in
+//      lvi_sam/node_interface.h.
+//   2. Provide concrete types under the same namespaces used by the
+//      algorithmic code (ros::, sensor_msgs::, nav_msgs::, tf::, …).
+//   3. Include your adapter instead of this file.
+//
+// The algorithmic classes are pure libraries; they contain no I/O of their
+// own.  All pub/sub wiring lives in the thin *_node.cpp wrappers.
 
 #include <functional>
 #include <string>

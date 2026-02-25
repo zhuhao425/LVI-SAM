@@ -11,6 +11,8 @@
 #include "parameters.h"
 #include "utility/visualization.h"
 
+using namespace Eigen;
+
 
 Estimator estimator;
 
@@ -278,7 +280,7 @@ void process()
             }
 
             // Get initialization info from lidar odometry
-            vector<float> initialization_info;
+            std::vector<float> initialization_info;
             m_odom.lock();
             initialization_info = odomRegister->getOdometry(odomQueue, img_msg->header.stamp.toSec() + estimator.td);
             m_odom.unlock();

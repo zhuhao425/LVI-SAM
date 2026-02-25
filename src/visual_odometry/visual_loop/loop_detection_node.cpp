@@ -2,6 +2,9 @@
 #include "keyframe.h"
 #include "loop_detection.h"
 
+using namespace Eigen;
+using namespace std;
+
 #define SKIP_FIRST_CNT 10
 
 queue<sensor_msgs::ImageConstPtr>           image_buf;

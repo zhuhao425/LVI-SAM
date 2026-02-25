@@ -1,5 +1,8 @@
 #include "initial_sfm.h"
 
+using namespace Eigen;
+using namespace std;
+
 GlobalSFM::GlobalSFM(){}
 
 void GlobalSFM::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,

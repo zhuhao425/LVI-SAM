@@ -1,5 +1,8 @@
 #include "solve_5pts.h"
 
+using namespace Eigen;
+using namespace std;
+
 
 namespace cv {
     void decomposeEssentialMat( InputArray _E, OutputArray _R1, OutputArray _R2, OutputArray _t )

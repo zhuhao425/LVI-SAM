@@ -35,15 +35,13 @@
 #include "../visual_feature/camera_models/CataCamera.h"
 #include "../visual_feature/camera_models/PinholeCamera.h"
 
-using namespace std;
-
 extern camodocal::CameraPtr m_camera;
 
 extern Eigen::Vector3d tic;
 extern Eigen::Matrix3d qic;
 
-extern string PROJECT_NAME;
-extern string IMAGE_TOPIC;
+extern std::string PROJECT_NAME;
+extern std::string IMAGE_TOPIC;
 
 extern int DEBUG_IMAGE;
 extern int LOOP_CLOSURE;

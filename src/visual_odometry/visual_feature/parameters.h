@@ -34,8 +34,6 @@
 #include <mutex>
 #include <cassert>
 
-using namespace std;
-
 typedef pcl::PointXYZI PointType;
 
 

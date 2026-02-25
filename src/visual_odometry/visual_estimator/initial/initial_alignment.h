@@ -7,15 +7,12 @@
 #include <map>
 #include "../feature_manager.h"
 
-using namespace Eigen;
-using namespace std;
-
 class ImageFrame
 {
     public:
         ImageFrame(){};
-        ImageFrame(const map<int, vector<pair<int, Eigen::Matrix<double, 8, 1>>>>& _points, 
-                   const vector<float> &_lidar_initialization_info,
+        ImageFrame(const std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 8, 1>>>>& _points, 
+                   const std::vector<float> &_lidar_initialization_info,
                    double _t):
         t{_t}, is_key_frame{false}, reset_id{-1}, gravity{9.805}
         {
@@ -49,7 +46,7 @@ class ImageFrame
             gravity = _lidar_initialization_info[17];
         };
 
-        map<int, vector<pair<int, Eigen::Matrix<double, 8, 1>> > > points;
+        std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 8, 1>> > > points;
         double t;
         
         IntegrationBase *pre_integration;
@@ -57,16 +54,16 @@ class ImageFrame
 
         // Lidar odometry info
         int reset_id;
-        Vector3d T;
-        Matrix3d R;
-        Vector3d V;
-        Vector3d Ba;
-        Vector3d Bg;
+        Eigen::Vector3d T;
+        Eigen::Matrix3d R;
+        Eigen::Vector3d V;
+        Eigen::Vector3d Ba;
+        Eigen::Vector3d Bg;
         double gravity;
 };
 
 
-bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs, Vector3d &g, VectorXd &x);
+bool VisualIMUAlignment(std::map<double, ImageFrame> &all_image_frame, Eigen::Vector3d* Bgs, Eigen::Vector3d &g, Eigen::VectorXd &x);
 
 
 class odometryRegister
@@ -88,9 +85,9 @@ public:
     }
 
     // convert odometry from ROS Lidar frame to VINS camera frame
-    vector<float> getOdometry(deque<nav_msgs::Odometry>& odomQueue, double img_time)
+    std::vector<float> getOdometry(std::deque<nav_msgs::Odometry>& odomQueue, double img_time)
     {
-        vector<float> odometry_channel;
+        std::vector<float> odometry_channel;
         odometry_channel.resize(18, -1); // reset id(1), P(3), Q(4), V(3), Ba(3), Bg(3), gravity(1)
 
         nav_msgs::Odometry odomCur;

@@ -1,5 +1,8 @@
 #include "initial_alignment.h"
 
+using namespace Eigen;
+using namespace std;
+
 void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 {
     Matrix3d A;
