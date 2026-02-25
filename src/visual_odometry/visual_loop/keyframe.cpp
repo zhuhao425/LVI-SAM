@@ -1,5 +1,9 @@
 #include "keyframe.h"
 
+using namespace Eigen;
+using namespace DVision;
+using namespace std;
+
 template <typename Derived>
 static void reduceVector(vector<Derived> &v, vector<uchar> status)
 {

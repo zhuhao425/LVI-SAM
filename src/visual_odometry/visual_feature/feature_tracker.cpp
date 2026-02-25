@@ -1,5 +1,9 @@
 #include "feature_tracker.h"
 
+using namespace camodocal;
+using namespace Eigen;
+using namespace std;
+
 int FeatureTracker::n_id = 0;
 
 bool inBorder(const cv::Point2f &pt)

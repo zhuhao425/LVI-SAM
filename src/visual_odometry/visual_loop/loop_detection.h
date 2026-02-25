@@ -3,19 +3,16 @@
 #include "parameters.h"
 #include "keyframe.h"
 
-using namespace DVision;
-using namespace DBoW2;
-
 class LoopDetector
 {
 public:
 
-	BriefDatabase db;
-	BriefVocabulary* voc;
+	DBoW2::BriefDatabase db;
+	DBoW2::BriefVocabulary* voc;
 
-	map<int, cv::Mat> image_pool;
+	std::map<int, cv::Mat> image_pool;
 
-	list<KeyFrame*> keyframelist;
+	std::list<KeyFrame*> keyframelist;
 
 	LoopDetector();
 	void loadVocabulary(std::string voc_path);

@@ -16,14 +16,10 @@
 #include "parameters.h"
 #include "tic_toc.h"
 
-using namespace std;
-using namespace camodocal;
-using namespace Eigen;
-
 bool inBorder(const cv::Point2f &pt);
 
-void reduceVector(vector<cv::Point2f> &v, vector<uchar> status);
-void reduceVector(vector<int> &v, vector<uchar> status);
+void reduceVector(std::vector<cv::Point2f> &v, std::vector<uchar> status);
+void reduceVector(std::vector<int> &v, std::vector<uchar> status);
 
 class FeatureTracker
 {
@@ -38,9 +34,9 @@ class FeatureTracker
 
     bool updateID(unsigned int i);
 
-    void readIntrinsicParameter(const string &calib_file);
+    void readIntrinsicParameter(const std::string &calib_file);
 
-    void showUndistortion(const string &name);
+    void showUndistortion(const std::string &name);
 
     void rejectWithF();
 
@@ -49,14 +45,14 @@ class FeatureTracker
     cv::Mat mask;
     cv::Mat fisheye_mask;
     cv::Mat prev_img, cur_img, forw_img;
-    vector<cv::Point2f> n_pts;
-    vector<cv::Point2f> prev_pts, cur_pts, forw_pts;
-    vector<cv::Point2f> prev_un_pts, cur_un_pts;
-    vector<cv::Point2f> pts_velocity;
-    vector<int> ids;
-    vector<int> track_cnt;
-    map<int, cv::Point2f> cur_un_pts_map;
-    map<int, cv::Point2f> prev_un_pts_map;
+    std::vector<cv::Point2f> n_pts;
+    std::vector<cv::Point2f> prev_pts, cur_pts, forw_pts;
+    std::vector<cv::Point2f> prev_un_pts, cur_un_pts;
+    std::vector<cv::Point2f> pts_velocity;
+    std::vector<int> ids;
+    std::vector<int> track_cnt;
+    std::map<int, cv::Point2f> cur_un_pts_map;
+    std::map<int, cv::Point2f> prev_un_pts_map;
     camodocal::CameraPtr m_camera;
     double cur_time;
     double prev_time;
@@ -79,7 +75,7 @@ public:
     tf::StampedTransform transform;
 
     const int num_bins = 360;
-    vector<vector<PointType>> pointsArray;
+    std::vector<std::vector<PointType>> pointsArray;
 
     DepthRegister(ros::NodeHandle n_in):
     n(n_in)
@@ -97,7 +93,7 @@ public:
     sensor_msgs::ChannelFloat32 get_depth(const ros::Time& stamp_cur, const cv::Mat& imageCur, 
                                           const pcl::PointCloud<PointType>::Ptr& depthCloud,
                                           const camodocal::CameraPtr& camera_model ,
-                                          const vector<geometry_msgs::Point32>& features_2d)
+                                          const std::vector<geometry_msgs::Point32>& features_2d)
     {
         // 0.1 initialize depth for return
         sensor_msgs::ChannelFloat32 depth_of_point;
@@ -207,8 +203,8 @@ public:
         kdtree->setInputCloud(depth_cloud_unit_sphere);
 
         // 7. find the feature depth using kd-tree
-        vector<int> pointSearchInd;
-        vector<float> pointSearchSqDis;
+        std::vector<int> pointSearchInd;
+        std::vector<float> pointSearchSqDis;
         float dist_sq_threshold = pow(sin(bin_res / 180.0 * M_PI) * 5.0, 2);
         for (int i = 0; i < (int)features_3d_sphere->size(); ++i)
         {
@@ -271,8 +267,8 @@ public:
         // visualization project points on image for visualization (it's slow!)
         if (pub_depth_image.getNumSubscribers() != 0)
         {
-            vector<cv::Point2f> points_2d;
-            vector<float> points_distance;
+            std::vector<cv::Point2f> points_2d;
+            std::vector<float> points_distance;
 
             for (int i = 0; i < (int)depth_cloud_local->size(); ++i)
             {

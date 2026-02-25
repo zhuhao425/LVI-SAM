@@ -1,5 +1,8 @@
 #include "feature_manager.h"
 
+using namespace Eigen;
+using namespace std;
+
 int FeaturePerId::endFrame()
 {
     return start_frame + feature_per_frame.size() - 1;

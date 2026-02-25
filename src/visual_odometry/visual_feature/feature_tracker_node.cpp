@@ -1,5 +1,7 @@
 #include "feature_tracker.h"
 
+using namespace std;
+
 #define SHOW_UNDISTORTION 0
 
 

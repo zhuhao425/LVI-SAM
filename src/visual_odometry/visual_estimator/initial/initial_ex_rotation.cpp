@@ -1,5 +1,8 @@
 #include "initial_ex_rotation.h"
 
+using namespace Eigen;
+using namespace std;
+
 InitialEXRotation::InitialEXRotation(){
     frame_count = 0;
     Rc.push_back(Matrix3d::Identity());

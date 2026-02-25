@@ -1,5 +1,8 @@
 #include "estimator.h"
 
+using namespace Eigen;
+using namespace std;
+
 Estimator::Estimator(): f_manager{Rs}
 {
     failureCount = -1;

@@ -1,5 +1,8 @@
 #include "loop_detection.h"
 
+using namespace DBoW2;
+using namespace DVision;
+
 LoopDetector::LoopDetector() {
 }
 
